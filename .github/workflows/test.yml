@@ -1,0 +1,120 @@
+name: test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Decide which jobs have work to do. Skipped jobs count as passing, so these
+  # checks can be required in branch protection without blocking docs-only PRs.
+  changes:
+    name: detect changes
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      ros: ${{ steps.filter.outputs.ros }}
+      cognition: ${{ steps.filter.outputs.cognition }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            ros:
+              - "ros_ws/**"
+              - ".github/workflows/test.yml"
+            cognition:
+              - "cognition/**"
+              - ".github/workflows/test.yml"
+
+  ros:
+    name: colcon build and test
+    needs: changes
+    if: needs.changes.outputs.ros == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    container: ros:jazzy-ros-base
+    defaults:
+      run:
+        shell: bash
+        working-directory: ros_ws
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install package dependencies
+        run: |
+          apt-get update -qq
+          rosdep update --rosdistro jazzy -q
+          rosdep install --from-paths src --ignore-src -y -q
+
+      - name: Build
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          colcon build --event-handlers console_cohesion+
+
+      - name: Test
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          colcon test --event-handlers console_cohesion+
+          colcon test-result --verbose
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: colcon-test-results
+          path: ros_ws/build/*/pytest.xml
+          retention-days: 7
+          if-no-files-found: ignore
+
+  python:
+    name: pytest (cognition)
+    needs: changes
+    if: needs.changes.outputs.cognition == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check for Python code
+        id: detect
+        run: |
+          if find cognition -name '*.py' | grep -q .; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No Python code in cognition/ yet; skipping."
+          fi
+
+      - uses: actions/setup-python@v7
+        if: steps.detect.outputs.present == 'true'
+        with:
+          python-version: "3.12"
+
+      - name: Run pytest with coverage
+        if: steps.detect.outputs.present == 'true'
+        run: |
+          pip install pytest pytest-cov
+          if [ -f cognition/requirements.txt ]; then pip install -r cognition/requirements.txt; fi
+          pytest cognition --cov=cognition --cov-report=xml --junitxml=pytest-cognition.xml
+
+      - name: Upload coverage and results
+        if: always() && steps.detect.outputs.present == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: cognition-test-results
+          path: |
+            coverage.xml
+            pytest-cognition.xml
+          retention-days: 7
