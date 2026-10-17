@@ -1,0 +1,10 @@
+config:
+  MD013: false  # line length: prose is wrapped by editors, tables can't be
+  MD033:        # inline HTML: allow the few elements GitHub renders
+    allowed_elements: [br, details, summary, img]
+  MD041: false  # first line heading: PR/issue templates start with comments
+  MD060: false  # table pipe spacing: `|---|` separators are fine
+ignores:
+  - "ros_ws/build/**"
+  - "ros_ws/install/**"
+  - "ros_ws/log/**"
