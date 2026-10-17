@@ -1,18 +1,9 @@
 name: test
 
-# Only runs when code it can test changes, to keep CI minutes low.
 on:
   pull_request:
-    paths:
-      - "ros_ws/**"
-      - "cognition/**"
-      - ".github/workflows/test.yml"
   push:
     branches: [main]
-    paths:
-      - "ros_ws/**"
-      - "cognition/**"
-      - ".github/workflows/test.yml"
   workflow_dispatch:
 
 permissions:
@@ -23,8 +14,34 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Decide which jobs have work to do. Skipped jobs count as passing, so these
+  # checks can be required in branch protection without blocking docs-only PRs.
+  changes:
+    name: detect changes
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      pull-requests: read
+    outputs:
+      ros: ${{ steps.filter.outputs.ros }}
+      cognition: ${{ steps.filter.outputs.cognition }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            ros:
+              - "ros_ws/**"
+              - ".github/workflows/test.yml"
+            cognition:
+              - "cognition/**"
+              - ".github/workflows/test.yml"
+
   ros:
     name: colcon build and test
+    needs: changes
+    if: needs.changes.outputs.ros == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     container: ros:jazzy-ros-base
@@ -63,6 +80,8 @@ jobs:
 
   python:
     name: pytest (cognition)
+    needs: changes
+    if: needs.changes.outputs.cognition == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
