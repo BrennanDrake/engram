@@ -1,0 +1,223 @@
+name: images
+
+# base (amd64 + arm64) is rebuilt only when docker/base.Dockerfile changes and
+# is pushed from main. robot (arm64) and dev (amd64) build on top of it: PRs
+# build without pushing so Dockerfile breakage is caught; main pushes to GHCR.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IMAGE_PREFIX: ghcr.io/brennandrake/engram
+
+jobs:
+  changes:
+    name: detect changes
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      base: ${{ steps.filter.outputs.base == 'true' || github.event_name == 'workflow_dispatch' }}
+      robot: ${{ steps.filter.outputs.robot == 'true' || github.event_name == 'workflow_dispatch' }}
+      dev: ${{ steps.filter.outputs.dev == 'true' || github.event_name == 'workflow_dispatch' }}
+      base_tag: ${{ steps.tag.outputs.base_tag }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            base: &base
+              - "docker/base.Dockerfile"
+              - ".github/workflows/images.yml"
+            robot:
+              - *base
+              - "docker/robot.Dockerfile"
+              - "docker/entrypoint.sh"
+              - ".dockerignore"
+              - "ros_ws/src/**"
+            dev:
+              - *base
+              - "docker/dev.Dockerfile"
+      - name: Compute base tag
+        id: tag
+        run: echo "base_tag=$(date -u +%Y%m%d)-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+  # Push base for each architecture from main. PRs build base inside the image
+  # job below instead, so nothing unreviewed reaches the registry.
+  base:
+    name: base (${{ matrix.arch }})
+    needs: changes
+    if: needs.changes.outputs.base == 'true' && github.event_name != 'pull_request'
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push
+        env:
+          TAG: ${{ env.IMAGE_PREFIX }}/base:${{ needs.changes.outputs.base_tag }}-${{ matrix.arch }}
+        run: |
+          docker build -f docker/base.Dockerfile -t "$TAG" \
+            --label org.opencontainers.image.source="${{ github.server_url }}/${{ github.repository }}" \
+            --label org.opencontainers.image.revision="$GITHUB_SHA" \
+            --label org.opencontainers.image.created="$(date -u +%Y-%m-%dT%H:%M:%SZ)" .
+          docker push "$TAG"
+
+  base-manifest:
+    name: base (manifest)
+    needs: [changes, base]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Combine architectures into base:<tag> and base:latest
+        env:
+          BASE: ${{ env.IMAGE_PREFIX }}/base
+          BASE_TAG: ${{ needs.changes.outputs.base_tag }}
+        run: |
+          docker buildx imagetools create -t "$BASE:$BASE_TAG" -t "$BASE:latest" \
+            "$BASE:$BASE_TAG-amd64" "$BASE:$BASE_TAG-arm64"
+
+  image:
+    name: ${{ matrix.image }} (${{ matrix.arch }})
+    needs: [changes, base-manifest]
+    # Runs after base-manifest when base changed on main, otherwise right away.
+    if: >-
+      always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
+      && (needs.changes.outputs.robot == 'true' || needs.changes.outputs.dev == 'true')
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: robot
+            arch: arm64
+            runner: ubuntu-24.04-arm
+            moving_tag: main
+          - image: dev
+            arch: amd64
+            runner: ubuntu-24.04
+            moving_tag: latest
+    env:
+      CHANGED: ${{ needs.changes.outputs[matrix.image] }}
+      BASE_CHANGED: ${{ needs.changes.outputs.base }}
+      DOCKERFILE: docker/${{ matrix.image }}.Dockerfile
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Decide what to build
+        id: plan
+        run: |
+          if [[ "$CHANGED" == true && -f "$DOCKERFILE" ]]; then
+            echo "build=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No $DOCKERFILE change to build."
+          fi
+          # A PR that changes base must prove base builds on this architecture.
+          if [[ "$BASE_CHANGED" == true && "$GITHUB_EVENT_NAME" == pull_request ]]; then
+            echo "base=local" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: docker/login-action@v4
+        if: steps.plan.outputs.build == 'true' || steps.plan.outputs.base == 'local'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pick or build base
+        id: base
+        if: steps.plan.outputs.build == 'true' || steps.plan.outputs.base == 'local'
+        run: |
+          # Also builds base when none has been pushed yet (first run).
+          if [[ "${{ steps.plan.outputs.base }}" == local ]] \
+            || ! docker manifest inspect "$IMAGE_PREFIX/base:latest" > /dev/null 2>&1; then
+            docker build -f docker/base.Dockerfile -t engram-base:local .
+            echo "image=engram-base:local" >> "$GITHUB_OUTPUT"
+          else
+            echo "image=$IMAGE_PREFIX/base:latest" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build ${{ matrix.image }}
+        if: steps.plan.outputs.build == 'true'
+        run: |
+          docker build -f "$DOCKERFILE" -t "engram-${{ matrix.image }}:ci" \
+            --build-arg BASE_IMAGE="${{ steps.base.outputs.image }}" \
+            --label org.opencontainers.image.source="${{ github.server_url }}/${{ github.repository }}" \
+            --label org.opencontainers.image.revision="$GITHUB_SHA" \
+            --label org.opencontainers.image.created="$(date -u +%Y-%m-%dT%H:%M:%SZ)" .
+
+      - name: Image size report
+        if: steps.plan.outputs.build == 'true'
+        run: |
+          {
+            echo "### ${{ matrix.image }} (${{ matrix.arch }})"
+            echo
+            echo "| Image | Size |"
+            echo "|---|---|"
+            for img in "${{ steps.base.outputs.image }}" "engram-${{ matrix.image }}:ci"; do
+              size=$(docker image inspect -f '{{ .Size }}' "$img")
+              echo "| \`$img\` | $((size / 1024 / 1024)) MiB |"
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Push
+        if: steps.plan.outputs.build == 'true' && github.ref == 'refs/heads/main'
+        env:
+          REPO: ${{ env.IMAGE_PREFIX }}/${{ matrix.image }}
+        run: |
+          for tag in "${GITHUB_SHA::7}" "${{ matrix.moving_tag }}"; do
+            docker tag "engram-${{ matrix.image }}:ci" "$REPO:$tag"
+            docker push "$REPO:$tag"
+          done
+
+      # Report only for now; make it blocking once the findings are triaged.
+      - name: Trivy scan (non-blocking)
+        if: steps.plan.outputs.build == 'true' && github.ref == 'refs/heads/main' && matrix.image == 'robot'
+        continue-on-error: true
+        run: |
+          {
+            echo "### Trivy: HIGH and CRITICAL vulnerabilities"
+            echo '```'
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock ghcr.io/aquasecurity/trivy:0.76.0 \
+              image --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed --no-progress \
+              --exit-code 0 "engram-robot:ci" | tail -n 60
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
