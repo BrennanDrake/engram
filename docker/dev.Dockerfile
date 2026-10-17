@@ -21,7 +21,8 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 # Same pre-commit version as CI (.github/workflows/lint.yml).
-RUN pip3 install --no-cache-dir --break-system-packages pre-commit==4.7.0
+# --ignore-installed: pip cannot replace Debian-owned packages such as packaging.
+RUN pip3 install --no-cache-dir --break-system-packages --ignore-installed pre-commit==4.7.0
 
 # The ubuntu base image already has user "ubuntu" with UID 1000, which matches
 # the usual desktop user, so files created in the mounted repo stay yours.
@@ -29,5 +30,5 @@ RUN echo "ubuntu ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/ubuntu \
   && chmod 0440 /etc/sudoers.d/ubuntu \
   && echo "source /opt/ros/jazzy/setup.bash" >> /home/ubuntu/.bashrc
 
-USER ubuntu
+USER 1000:1000
 WORKDIR /workspaces/engram
