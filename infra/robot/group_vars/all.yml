@@ -16,6 +16,25 @@ chrony_server: 192.168.1.203
 docker_insecure_registries:
   - 192.168.1.203:3300
 
+# USB serial devices that get a stable /dev/<name> symlink. Devices sharing a
+# vendor:product ID must set `serial` (find it with udevadm, see README).
+udev_devices:
+  - name: opencr
+    description: OpenCR board (STM32 virtual COM port)
+    vendor: "0483"
+    product: "5740"
+    serial: ""
+  - name: lidar
+    description: LDS lidar via its USB2LDS adapter (CP2102)
+    vendor: "10c4"
+    product: "ea60"
+    serial: ""
+  - name: bms
+    description: JBD BMS through a USB-UART adapter (CH340); adjust to the adapter used
+    vendor: "1a86"
+    product: "7523"
+    serial: ""
+
 # Pass at run time with -e; never commit it. Empty means "don't join".
 tailscale_authkey: ""
 tailscale_hostname: "{{ inventory_hostname }}"

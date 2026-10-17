@@ -1,0 +1,7 @@
+# Managed by Ansible (infra/robot, role udev). Edit udev_devices in group_vars.
+# Stable names for the robot's USB serial devices, e.g. /dev/opencr.
+{% for dev in udev_devices %}
+
+# {{ dev.description }}
+SUBSYSTEM=="tty", ATTRS{idVendor}=="{{ dev.vendor }}", ATTRS{idProduct}=="{{ dev.product }}"{% if dev.serial %}, ATTRS{serial}=="{{ dev.serial }}"{% endif %}, SYMLINK+="{{ dev.name }}", MODE="0660", GROUP="dialout", ENV{ID_MM_DEVICE_IGNORE}="1"
+{% endfor %}

@@ -1,0 +1,4 @@
+- name: Reload udev rules
+  ansible.builtin.shell:
+    cmd: udevadm control --reload-rules && udevadm trigger --subsystem-match=tty
+  changed_when: true
