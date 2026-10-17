@@ -1,0 +1,31 @@
+// VS Code dev container: the repo mounted into the `dev` image.
+// See CONTRIBUTING.md, "Dev container".
+{
+  "name": "engram dev",
+  "image": "ghcr.io/brennandrake/engram/dev:latest",
+  "remoteUser": "ubuntu",
+  "updateRemoteUserUID": true,
+  "workspaceFolder": "/workspaces/engram",
+  "runArgs": [
+    "--network=host",
+    "--ipc=host"
+    // Add "--gpus=all" once the NVIDIA container toolkit is installed.
+  ],
+  "containerEnv": {
+    "DISPLAY": "${localEnv:DISPLAY}"
+  },
+  "mounts": [
+    "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind"
+  ],
+  "postCreateCommand": "pre-commit install",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "charliermarsh.ruff",
+        "ms-iot.vscode-ros",
+        "ms-vscode.cpptools"
+      ]
+    }
+  }
+}
