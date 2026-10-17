@@ -1,0 +1,27 @@
+- name: Check that devices sharing a USB ID are told apart by serial
+  ansible.builtin.assert:
+    that:
+      - udev_ids_without_serial | length == udev_ids_without_serial | unique | length
+      - udev_ids_without_serial | intersect(udev_ids_with_serial) | length == 0
+    fail_msg: >-
+      Two devices in udev_devices share a vendor:product ID and have no serial.
+      Set their serials (see infra/robot/README.md, "Stable device names").
+    quiet: true
+  vars:
+    udev_unserialed: "{{ udev_devices | rejectattr('serial') }}"
+    udev_serialed: "{{ udev_devices | selectattr('serial') }}"
+    udev_ids_without_serial: >-
+      {{ udev_unserialed | map(attribute='vendor')
+         | zip(udev_unserialed | map(attribute='product')) | map('join', ':') | list }}
+    udev_ids_with_serial: >-
+      {{ udev_serialed | map(attribute='vendor')
+         | zip(udev_serialed | map(attribute='product')) | map('join', ':') | list }}
+
+- name: Install stable device name rules
+  ansible.builtin.template:
+    src: 99-engram.rules.j2
+    dest: /etc/udev/rules.d/99-engram.rules
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload udev rules
