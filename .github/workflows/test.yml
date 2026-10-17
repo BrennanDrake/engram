@@ -26,6 +26,7 @@ jobs:
     outputs:
       ros: ${{ steps.filter.outputs.ros }}
       cognition: ${{ steps.filter.outputs.cognition }}
+      robotctl: ${{ steps.filter.outputs.robotctl }}
     steps:
       - uses: actions/checkout@v7
       - uses: dorny/paths-filter@v4
@@ -37,6 +38,9 @@ jobs:
               - ".github/workflows/test.yml"
             cognition:
               - "cognition/**"
+              - ".github/workflows/test.yml"
+            robotctl:
+              - "infra/robotctl/**"
               - ".github/workflows/test.yml"
 
   ros:
@@ -118,3 +122,21 @@ jobs:
             coverage.xml
             pytest-cognition.xml
           retention-days: 7
+
+  robotctl:
+    name: pytest (robotctl)
+    needs: changes
+    if: needs.changes.outputs.robotctl == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"  # the Pi's Ubuntu 24.04 Python
+
+      - name: Run pytest
+        run: |
+          pip install pytest
+          pytest infra/robotctl

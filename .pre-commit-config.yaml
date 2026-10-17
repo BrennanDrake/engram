@@ -36,6 +36,7 @@ repos:
     rev: v2.4.0
     hooks:
       - id: mypy
+        additional_dependencies: [pytest]  # typed fixtures and marks in tests
         # Launch files are declarative; their `launch/` dir also shadows the launch package
         exclude: ^(training/|ros_ws/src/.*/(test|launch)/)
 
