@@ -26,6 +26,9 @@ bringup.launch.py`). The robot service mounts `/dev` with cgroup rules for
 serial and USB devices, so `/dev/opencr` and friends keep working across
 replugs, and stores maps, episodes and config under `/srv/engram/` on the SSD.
 
+A third service, `foxglove`, runs `foxglove_bridge` on port 8765 for
+[Foxglove](https://foxglove.dev/); see `docs/foxglove/`.
+
 Its healthcheck runs `engram_tools health_check` against
 `ENGRAM_HEALTH_TOPICS` (default `/heartbeat:0.5` until the TurtleBot3 bringup
 lands, then `/odom:10 /scan:4`).

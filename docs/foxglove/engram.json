@@ -1,0 +1,44 @@
+{
+  "configById": {
+    "3D!robot": {
+      "followMode": "follow-pose",
+      "followTf": "base_link",
+      "topics": {
+        "/scan": { "visible": true, "pointSize": 3 },
+        "/odom": { "visible": true },
+        "/map": { "visible": true }
+      },
+      "layers": {
+        "grid": { "layerId": "foxglove.Grid", "visible": true, "size": 10, "divisions": 10 }
+      }
+    },
+    "Plot!speed": {
+      "title": "Odometry speed",
+      "paths": [
+        { "value": "/odom.twist.twist.linear.x", "enabled": true, "timestampMethod": "receiveTime", "label": "linear m/s" },
+        { "value": "/odom.twist.twist.angular.z", "enabled": true, "timestampMethod": "receiveTime", "label": "angular rad/s" }
+      ]
+    },
+    "RawMessages!heartbeat": {
+      "topicPath": "/heartbeat"
+    },
+    "RosOut!logs": {}
+  },
+  "globalVariables": {},
+  "userNodes": {},
+  "playbackConfig": { "speed": 1 },
+  "layout": {
+    "direction": "row",
+    "first": "3D!robot",
+    "second": {
+      "direction": "column",
+      "first": "Plot!speed",
+      "second": {
+        "direction": "column",
+        "first": "RawMessages!heartbeat",
+        "second": "RosOut!logs"
+      }
+    },
+    "splitPercentage": 65
+  }
+}
