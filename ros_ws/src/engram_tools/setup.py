@@ -20,6 +20,7 @@ setup(
     entry_points={
         'console_scripts': [
             'health_check = engram_tools.health_check:main',
+            'link_check = engram_tools.link_check:main',
         ],
     },
 )

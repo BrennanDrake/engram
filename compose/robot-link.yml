@@ -1,0 +1,8 @@
+# Layer on dev.yml or sim.yml to join the desktop to the robot's ROS graph: the
+# desktop's Zenoh router connects to the robot's router (which listens on all
+# interfaces, port 7447, by rmw_zenoh's default config).
+#   ENGRAM_ROBOT_HOST=192.168.1.50 docker compose -f compose/dev.yml -f compose/robot-link.yml up -d
+services:
+  zenoh-router:
+    environment:
+      ZENOH_CONFIG_OVERRIDE: 'connect/endpoints=["tcp/${ENGRAM_ROBOT_HOST:?set ENGRAM_ROBOT_HOST}:7447"]'
