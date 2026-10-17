@@ -1,0 +1,14 @@
+# Close to the ROS 2 C++ style guide (ament_clang_format).
+BasedOnStyle: Google
+ColumnLimit: 100
+AccessModifierOffset: -2
+AlignAfterOpenBracket: AlwaysBreak
+BreakConstructorInitializers: BeforeComma
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterClass: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterStruct: true
+DerivePointerAlignment: false
+PointerAlignment: Middle
