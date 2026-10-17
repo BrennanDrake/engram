@@ -38,3 +38,19 @@ services:
       timeout: 20s
       start_period: 60s
       retries: 3
+
+  # Foxglove WebSocket bridge: open ws://<robot>:8765 in Foxglove and load
+  # docs/foxglove/engram.json. The Pi sits behind the home router with no port
+  # forwarding, so 0.0.0.0 means LAN, Tailscale and localhost. Set
+  # FOXGLOVE_ADDRESS to the Tailscale IP to allow Tailscale only.
+  foxglove:
+    <<: *robot
+    depends_on: [zenoh-router]
+    command:
+      - ros2
+      - launch
+      - foxglove_bridge
+      - foxglove_bridge_launch.xml
+      - port:=8765
+      - address:=${FOXGLOVE_ADDRESS:-0.0.0.0}
+      - send_buffer_limit:=5000000  # drop, don't queue, when Wi-Fi can't keep up
