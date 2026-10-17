@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# colcon / ROS
+ros_ws/build/
+ros_ws/install/
+ros_ws/log/
+build/
+install/
+log/
+
+# Recordings belong on the SSD/NAS, not in git
+*.bag
+*.mcap
+*.db3
+
+# Firmware build outputs
+.pio/
+*.bin
+*.elf
+
+# IDEs and OS
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.swp
+.DS_Store
+
+# Local env and secrets
+.env
+*.env.local

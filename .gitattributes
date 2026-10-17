@@ -1,0 +1,16 @@
+* text=auto eol=lf
+
+# CAD and meshes go through Git LFS
+*.stl filter=lfs diff=lfs merge=lfs -text
+*.step filter=lfs diff=lfs merge=lfs -text
+*.stp filter=lfs diff=lfs merge=lfs -text
+*.3mf filter=lfs diff=lfs merge=lfs -text
+*.f3d filter=lfs diff=lfs merge=lfs -text
+*.FCStd filter=lfs diff=lfs merge=lfs -text
+*.dae filter=lfs diff=lfs merge=lfs -text
+
+# Images and documents
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.pdf binary
