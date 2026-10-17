@@ -1,0 +1,31 @@
+name: Task
+description: One unit of work. Software tasks are one PR each.
+title: "T<epic>.<story>.<n> "
+labels: ["type:task"]
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options:
+        - PR (an agent or Brennan opens a PR)
+        - Hands-on (physical work, recorded by a docs PR)
+        - Decision (outcome goes into an ADR)
+    validations:
+      required: true
+  - type: dropdown
+    id: size
+    attributes:
+      label: Size
+      options:
+        - S (under a day)
+        - M (a few days)
+        - L (a week or more)
+  - type: textarea
+    id: subtasks
+    attributes:
+      label: Subtasks
+      value: |
+        - [ ]
+    validations:
+      required: true

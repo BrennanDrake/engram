@@ -1,0 +1,36 @@
+name: Bug
+description: Something on the robot, in sim or in CI behaves wrongly.
+labels: ["type:bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: And what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      value: |
+        1.
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where
+      options: [On the robot, In simulation, On the desktop, In CI]
+    validations:
+      required: true
+  - type: textarea
+    id: state
+    attributes:
+      label: Robot state
+      description: Docked or not, battery level, image tag (git sha), firmware version, relevant rosbag or logs.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      render: text

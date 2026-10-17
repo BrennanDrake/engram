@@ -1,0 +1,26 @@
+name: Story
+description: A user-visible outcome with acceptance criteria.
+title: "S<epic>.<n> "
+labels: ["type:story"]
+body:
+  - type: textarea
+    id: story
+    attributes:
+      label: Story
+      placeholder: "As <who>, I want <what>, so that <why>."
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Observable checks that prove the story is done.
+      value: |
+        - [ ]
+    validations:
+      required: true
+  - type: input
+    id: epic
+    attributes:
+      label: Epic
+      placeholder: "#1"
