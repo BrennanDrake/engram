@@ -27,6 +27,8 @@ warn_unreachable = true
 pretty = true
 # rclpy and friends ship without complete stubs
 ignore_missing_imports = true
+# ...which makes rclpy.node.Node `Any`; nodes must still subclass it
+disallow_subclassing_any = false
 
 [tool.codespell]
 skip = "*.svg,*.stl,*.lock"
