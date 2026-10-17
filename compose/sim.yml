@@ -1,0 +1,20 @@
+# TurtleBot3 Burger in Gazebo's house world, on top of the dev services.
+#   xhost +local:docker   # once per login, lets the containers open windows
+#   docker compose -f compose/sim.yml up
+# Our own URDF and world replace the stock ones once the widened base is modelled.
+name: engram-dev
+
+include:
+  - dev.yml
+
+services:
+  sim:
+    extends:
+      file: dev.yml
+      service: dev
+    environment:
+      TURTLEBOT3_MODEL: burger
+    command:
+      - bash
+      - -lc
+      - source /opt/ros/jazzy/setup.bash && ros2 launch turtlebot3_gazebo turtlebot3_house.launch.py
