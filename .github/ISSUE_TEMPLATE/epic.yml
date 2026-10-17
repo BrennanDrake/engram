@@ -1,0 +1,29 @@
+name: Epic
+description: A capability of the MVP, made of several stories.
+title: "E<n> "
+labels: ["type:epic"]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What the robot or the project can do once this epic is done.
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      description: The one observable result that closes the epic.
+    validations:
+      required: true
+  - type: input
+    id: depends
+    attributes:
+      label: Depends on
+      placeholder: "E1, E3"
+  - type: textarea
+    id: stories
+    attributes:
+      label: Stories
+      description: Add stories as sub-issues; list them here until then.
