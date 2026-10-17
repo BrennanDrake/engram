@@ -1,0 +1,76 @@
+- name: Install base packages
+  ansible.builtin.apt:
+    name:
+      - curl
+      - git
+      - htop
+      - iw
+      - python3
+      - usbutils
+      - vim
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Add the admin user to dialout for serial devices
+  ansible.builtin.user:
+    name: "{{ ansible_user }}"
+    groups: [dialout]
+    append: true
+
+- name: Cap the systemd journal size
+  ansible.builtin.copy:
+    dest: /etc/systemd/journald.conf.d/engram.conf
+    content: |
+      [Journal]
+      SystemMaxUse={{ journald_max_use }}
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart journald
+
+- name: Create the swap file
+  ansible.builtin.command:
+    cmd: fallocate -l {{ swap_size_mb }}M /swapfile
+    creates: /swapfile
+
+- name: Restrict swap file permissions
+  ansible.builtin.file:
+    path: /swapfile
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Format the swap file
+  ansible.builtin.command:
+    cmd: mkswap /swapfile
+  register: base_mkswap
+  changed_when: base_mkswap.rc == 0
+  when: ansible_facts['swaptotal_mb'] == 0
+
+- name: Enable swap now
+  ansible.builtin.command:
+    cmd: swapon /swapfile
+  changed_when: true
+  when: ansible_facts['swaptotal_mb'] == 0
+
+- name: Enable swap at boot
+  ansible.builtin.lineinfile:
+    path: /etc/fstab
+    line: /swapfile none swap sw 0 0
+    state: present
+
+- name: Install the Wi-Fi power-save-off unit
+  ansible.builtin.template:
+    src: wifi-powersave-off.service.j2
+    dest: /etc/systemd/system/wifi-powersave-off.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart wifi-powersave-off
+
+- name: Enable the Wi-Fi power-save-off unit
+  ansible.builtin.systemd_service:
+    name: wifi-powersave-off.service
+    enabled: true
+    daemon_reload: true

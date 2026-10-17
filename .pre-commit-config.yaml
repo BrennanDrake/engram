@@ -66,6 +66,16 @@ repos:
     hooks:
       - id: shellcheck
 
+  # Ansible playbooks (the robot's provisioning)
+  - repo: https://github.com/ansible/ansible-lint
+    rev: v26.10.1
+    hooks:
+      - id: ansible-lint
+        args: [infra/robot]
+        files: ^infra/robot/
+        always_run: false
+        language_version: python3  # the hook defaults to python3.14
+
   # Markdown (rules in .markdownlint-cli2.yaml)
   - repo: https://github.com/DavidAnson/markdownlint-cli2
     rev: v0.23.3

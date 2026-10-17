@@ -1,0 +1,10 @@
+# Provision the robot's Pi from a fresh Ubuntu Server 24.04 (arm64) install.
+# Run from the desktop: ansible-playbook site.yml [-e tailscale_authkey=tskey-...]
+- name: Provision the robot host
+  hosts: robot
+  become: true
+  roles:
+    - base
+    - docker
+    - time
+    - tailscale

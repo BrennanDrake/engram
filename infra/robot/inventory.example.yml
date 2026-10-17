@@ -1,0 +1,6 @@
+# Copy to inventory.yml (git-ignored) and set the robot's address.
+robot:
+  hosts:
+    engram:
+      ansible_host: 192.168.1.50
+      ansible_user: ubuntu
