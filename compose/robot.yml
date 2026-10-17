@@ -1,0 +1,40 @@
+# Robot stack on the Pi. `robotctl deploy <sha>` writes ENGRAM_TAG to .env next
+# to this file, then pulls and restarts. Data lives on the SSD under /srv/engram.
+name: engram
+
+x-robot: &robot
+  image: ${ENGRAM_REGISTRY:-192.168.1.203:3300/carvinaxe3}/robot:${ENGRAM_TAG:?set ENGRAM_TAG in .env}
+  network_mode: host  # ROS traffic and the Zenoh router on the robot's own IP
+  ipc: host           # shared memory transport between containers
+  restart: unless-stopped
+
+services:
+  zenoh-router:
+    <<: *robot
+    command: ["ros2", "run", "rmw_zenoh_cpp", "rmw_zenohd"]
+
+  robot:
+    <<: *robot
+    depends_on: [zenoh-router]
+    environment:
+      ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-0}
+      # Topics and minimum rates the healthcheck requires. Add /odom:10 /scan:4
+      # once the TurtleBot3 bringup runs here (E4).
+      ENGRAM_HEALTH_TOPICS: ${ENGRAM_HEALTH_TOPICS:-/heartbeat:0.5}
+    volumes:
+      - /srv/engram/maps:/data/maps
+      - /srv/engram/episodes:/data/episodes
+      - /srv/engram/config:/data/config:ro
+      # All of /dev, so /dev/opencr etc. survive unplug/replug (the OpenCR
+      # re-enumerates on reset); access is limited by the cgroup rules below.
+      - /dev:/dev
+    device_cgroup_rules:
+      - "c 166:* rmw"  # ttyACM: OpenCR
+      - "c 188:* rmw"  # ttyUSB: lidar, BMS adapter
+      - "c 189:* rmw"  # raw USB: RealSense
+    healthcheck:
+      test: ["CMD", "/entrypoint.sh", "ros2", "run", "engram_tools", "health_check"]
+      interval: 30s
+      timeout: 20s
+      start_period: 60s
+      retries: 3
