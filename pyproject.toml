@@ -1,0 +1,33 @@
+# Repo-wide tool settings. Individual packages keep their own build metadata.
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+extend-exclude = ["ros_ws/build", "ros_ws/install", "ros_ws/log"]
+
+[tool.ruff.lint]
+select = [
+  "E", "W",  # pycodestyle
+  "F",       # pyflakes
+  "I",       # isort
+  "B",       # bugbear
+  "UP",      # pyupgrade
+  "N",       # pep8-naming
+  "SIM",     # simplify
+  "RUF",     # ruff-specific
+]
+
+[tool.ruff.format]
+quote-style = "single"  # matches the ROS 2 Python style (ament_flake8 / flake8-quotes)
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unreachable = true
+pretty = true
+# rclpy and friends ship without complete stubs
+ignore_missing_imports = true
+
+[tool.codespell]
+skip = "*.svg,*.stl,*.lock"
+ignore-words-list = "ros"
