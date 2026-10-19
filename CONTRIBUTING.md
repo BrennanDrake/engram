@@ -48,11 +48,28 @@ pre-commit install           # run the hooks on every commit
 pre-commit run --all-files   # run everything once
 ```
 
-Build and test ROS packages inside the dev container (arrives with epic E2):
+### Dev container
+
+ROS builds and tests run inside the `dev` image (`docker/dev.Dockerfile`),
+which has ROS 2 Jazzy, Gazebo, RViz and the same pre-commit as CI.
+
+- **VS Code:** install the Dev Containers extension and run *Reopen in
+  Container*. It uses `.devcontainer/devcontainer.json` and pulls
+  `ghcr.io/brennandrake/engram/dev:latest` (run
+  `docker login ghcr.io` first while the package is private).
+- **Plain Docker:**
+
+  ```sh
+  docker run --rm -it --network host -v "$PWD":/workspaces/engram \
+    ghcr.io/brennandrake/engram/dev:latest bash
+  ```
+
+Inside the container:
 
 ```sh
+pre-commit run --all-files          # the lint job
 cd ros_ws
-colcon build --symlink-install
+colcon build --symlink-install      # the test job
 colcon test && colcon test-result --verbose
 ```
 
