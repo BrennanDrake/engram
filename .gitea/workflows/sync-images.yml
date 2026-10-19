@@ -1,0 +1,43 @@
+name: sync-images
+
+# Runs on the NAS's Gitea runner (GitHub ignores .gitea/). Copies new robot and
+# base tags from GHCR into the NAS registry so the robot pulls over the LAN.
+# Setup: infra/registry-sync/README.md.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SRC: ghcr.io/brennandrake/engram
+      DST: ${{ vars.NAS_REGISTRY_PREFIX }}
+      CRANE_VERSION: v0.22.1
+      CRANE_SHA256: 0ab7a1d6932a213aed964ce97666c3077fe691c8606413674a8b3e0b9ec4cda0
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install crane
+        run: |
+          curl -fsSL -o /tmp/crane.tgz \
+            "https://github.com/google/go-containerregistry/releases/download/$CRANE_VERSION/go-containerregistry_Linux_x86_64.tar.gz"
+          echo "$CRANE_SHA256  /tmp/crane.tgz" | sha256sum -c -
+          tar -xzf /tmp/crane.tgz -C /usr/local/bin crane
+
+      - name: Log in
+        env:
+          GHCR_USER: ${{ vars.GHCR_USER }}
+          GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
+          NAS_USER: ${{ vars.NAS_REGISTRY_USER }}
+          NAS_TOKEN: ${{ secrets.NAS_REGISTRY_TOKEN }}
+        run: |
+          echo "$GHCR_TOKEN" | crane auth login ghcr.io -u "$GHCR_USER" --password-stdin
+          echo "$NAS_TOKEN" | crane auth login "${DST%%/*}" -u "$NAS_USER" --password-stdin
+
+      - name: Copy new tags
+        run: infra/registry-sync/sync-images.sh "$SRC" "$DST"
