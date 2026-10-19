@@ -7,6 +7,7 @@ Planned packages:
 | Package | Purpose |
 |---|---|
 | `engram_bringup` | Launch files and parameters that start the robot |
+| `engram_description` | URDF (Waffle base + SO-101 arm) and RViz viewer |
 | `engram_arm_bridge` | SO-101 arm interface |
 | `engram_head` | RealSense pan-tilt control |
 | `engram_face_ui` | Face and debug UI on the robot screen |
