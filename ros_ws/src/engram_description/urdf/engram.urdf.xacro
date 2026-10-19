@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<!-- engram: TurtleBot3 Waffle base with an SO-101 follower arm on the top plate.
+
+     The base is the stock Waffle model from turtlebot3_description, included
+     unchanged, so its frames (base_footprint, base_link, base_scan, ...) match
+     the TurtleBot3 stack. base_link sits on the wheel axle; +x is forward.
+
+     Arm placement (see README.md for the numbers):
+       - y = 0: the arm base is symmetric about its own x axis, so this centres
+         it on the robot's long axis.
+       - x: the arm sits over the wheel axle, just ahead of the LDS, reaching
+         forward. Tune arm_x so the arm base's small diamond cutouts land on the
+         plate holes you are bolting through.
+       - z: arm base_link is 2.4 mm above the underside of the arm base, so it
+         sits at the Waffle top plate surface (91.5 mm) + 2.4 mm. -->
+<robot name="engram" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:arg name="arm_x" default="0.0222"/>
+  <xacro:arg name="arm_y" default="0.0"/>
+  <xacro:arg name="arm_yaw" default="0.0"/>
+
+  <xacro:property name="waffle_top_plate_z" value="0.0915"/>
+  <xacro:property name="so101_base_underside_z" value="-0.0024"/>
+
+  <xacro:include filename="$(find turtlebot3_description)/urdf/turtlebot3_waffle.urdf"/>
+  <xacro:include filename="$(find engram_description)/urdf/so101_follower.urdf.xacro"/>
+
+  <xacro:so101_follower prefix="arm_" parent="base_link">
+    <origin xyz="$(arg arm_x) $(arg arm_y) ${waffle_top_plate_z - so101_base_underside_z}"
+            rpy="0 0 $(arg arm_yaw)"/>
+  </xacro:so101_follower>
+
+</robot>
