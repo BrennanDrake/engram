@@ -1,0 +1,22 @@
+# ROS TF over the network needs the robot and desktop clocks in sync.
+- name: Install chrony
+  ansible.builtin.apt:
+    name: chrony
+    state: present
+
+- name: Prefer the LAN time server
+  ansible.builtin.copy:
+    dest: /etc/chrony/conf.d/engram.conf
+    content: |
+      # Managed by Ansible (infra/robot). The distro pools remain as fallback.
+      server {{ chrony_server }} iburst prefer
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart chrony
+
+- name: Start chrony at boot
+  ansible.builtin.systemd_service:
+    name: chrony
+    enabled: true
+    state: started

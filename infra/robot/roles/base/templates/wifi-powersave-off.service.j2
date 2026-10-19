@@ -1,0 +1,12 @@
+# Managed by Ansible (infra/robot). Wi-Fi power saving adds latency spikes to ROS traffic.
+[Unit]
+Description=Turn off Wi-Fi power saving on {{ wifi_interface }}
+After=sys-subsystem-net-devices-{{ wifi_interface }}.device
+BindsTo=sys-subsystem-net-devices-{{ wifi_interface }}.device
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/iw dev {{ wifi_interface }} set power_save off
+
+[Install]
+WantedBy=sys-subsystem-net-devices-{{ wifi_interface }}.device

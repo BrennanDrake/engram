@@ -1,0 +1,21 @@
+# Defaults for every host. Override per host in host_vars/<name>.yml.
+
+# Size of /swapfile in MiB (the Pi image ships without swap).
+swap_size_mb: 2048
+
+# Upper bound for the systemd journal on the SSD.
+journald_max_use: 500M
+
+# Wireless interface whose power saving is turned off (it causes latency spikes).
+wifi_interface: wlan0
+
+# NTP source on the LAN (NAS); public pools stay as a fallback.
+chrony_server: 192.168.1.203
+
+# Plain-HTTP registries Docker may pull from (the NAS Gitea registry).
+docker_insecure_registries:
+  - 192.168.1.203:3300
+
+# Pass at run time with -e; never commit it. Empty means "don't join".
+tailscale_authkey: ""
+tailscale_hostname: "{{ inventory_hostname }}"

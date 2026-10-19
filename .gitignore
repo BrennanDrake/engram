@@ -38,3 +38,6 @@ log/
 # Local env and secrets
 .env
 *.env.local
+
+# Ansible inventory with real addresses
+infra/robot/inventory.yml
