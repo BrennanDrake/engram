@@ -1,0 +1,35 @@
+# Desktop development: a shell in the dev image with the repo mounted, plus a
+# Zenoh router for local ROS nodes. Needs the NVIDIA container toolkit.
+#   docker compose -f compose/dev.yml up -d && docker compose -f compose/dev.yml exec dev bash
+name: engram-dev
+
+x-dev: &dev
+  image: ghcr.io/brennandrake/engram/dev:latest
+  network_mode: host
+  ipc: host
+  environment:
+    DISPLAY: ${DISPLAY:-:0}
+    ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-0}
+    NVIDIA_DRIVER_CAPABILITIES: all
+  volumes:
+    - ..:/workspaces/engram
+    - /tmp/.X11-unix:/tmp/.X11-unix
+  deploy:
+    resources:
+      reservations:
+        devices:
+          - driver: nvidia
+            count: all
+            capabilities: [gpu]
+
+services:
+  zenoh-router:
+    image: ghcr.io/brennandrake/engram/dev:latest
+    network_mode: host
+    command: ["bash", "-lc", "source /opt/ros/jazzy/setup.bash && ros2 run rmw_zenoh_cpp rmw_zenohd"]
+
+  dev:
+    <<: *dev
+    depends_on: [zenoh-router]
+    working_dir: /workspaces/engram
+    command: ["sleep", "infinity"]
