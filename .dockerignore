@@ -1,0 +1,7 @@
+# Allowlist: images only need these. Keeps build outputs, datasets and .git
+# out of the build context.
+*
+!docker/
+!ros_ws/src/
+**/__pycache__
+**/*.pyc
