@@ -60,7 +60,40 @@
       <origin xyz="${waffle_centre_x} 0 ${waffle_top_plate_z + $(arg deck_spacing)}" rpy="0 0 0"/>
     </joint>
 
+    <!-- Standoffs from the Waffle top plate up to the deck's underside, at the
+         same 10 places as the stock standoffs between the Waffle levels
+         (measured from waffle_base.stl, relative to the Waffle centre). With
+         deck_spacing 0.055 these are the 55 mm standoffs. Modelled as M3
+         hex standoffs, 5 mm across flats. -->
+    <xacro:property name="standoff_length" value="${$(arg deck_spacing) - plate_thickness}"/>
+    <xacro:macro name="deck_standoff" params="x y">
+      <visual>
+        <origin xyz="${x} ${y} ${-plate_thickness - standoff_length / 2}" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.0029" length="${standoff_length}"/>
+        </geometry>
+        <material name="grey"/>
+      </visual>
+      <collision>
+        <origin xyz="${x} ${y} ${-plate_thickness - standoff_length / 2}" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.0029" length="${standoff_length}"/>
+        </geometry>
+      </collision>
+    </xacro:macro>
+
     <link name="top_deck_link">
+      <xacro:deck_standoff x="-0.128" y="0.076"/>
+      <xacro:deck_standoff x="-0.128" y="-0.076"/>
+      <xacro:deck_standoff x="-0.088" y="0.128"/>
+      <xacro:deck_standoff x="-0.088" y="-0.128"/>
+      <xacro:deck_standoff x="-0.052" y="0.128"/>
+      <xacro:deck_standoff x="-0.052" y="-0.128"/>
+      <xacro:deck_standoff x="0.088" y="0.128"/>
+      <xacro:deck_standoff x="0.088" y="-0.128"/>
+      <xacro:deck_standoff x="0.128" y="0.076"/>
+      <xacro:deck_standoff x="0.128" y="-0.076"/>
+
       <!-- Same plate as the Waffle's other levels, cut from waffle_base.stl.
            Its top surface is at z = 91.5 mm in that mesh. -->
       <visual>

@@ -54,3 +54,10 @@ def test_without_deck_arm_sits_on_waffle_plate() -> None:
 def test_arm_x_overrides_default_in_base_link() -> None:
     assert origin(mount_joint(expand('top_deck:=false', 'arm_x:=0.03')))[0] == 0.03
     assert abs(origin(mount_joint(expand('arm_x:=-0.09')))[0] - (-0.09 + 0.064)) < 1e-9
+
+
+def test_deck_has_ten_standoffs_reaching_the_waffle_plate() -> None:
+    deck = next(link for link in expand().findall('link') if link.get('name') == 'top_deck_link')
+    standoffs = deck.findall('visual/geometry/cylinder')
+    assert len(standoffs) == 10
+    assert all(abs(float(c.get('length')) - (0.055 - 0.009)) < 1e-9 for c in standoffs)

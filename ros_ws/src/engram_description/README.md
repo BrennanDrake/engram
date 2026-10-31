@@ -50,8 +50,10 @@ All in Waffle `base_link`, which sits on the wheel axle with +x forward.
 The LDS stays on the Waffle top plate, which becomes the level below the deck.
 `top_deck_link` is the deck's top surface, centred over the Waffle footprint
 (x = -0.064 m). The deck uses the same plate as the Waffle's other levels,
-cut from `waffle_base.stl` into `meshes/waffle/waffle_plate.stl`; its
-standoffs are not modelled yet. `deck_spacing` is top surface to top surface,
+cut from `waffle_base.stl` into `meshes/waffle/waffle_plate.stl`. Ten
+standoffs (5 mm hex, drawn as cylinders) hold it up, at the same places as the
+stock standoffs between the Waffle levels; they are also collision shapes, so
+they show up where the LDS scan needs masking. `deck_spacing` is top surface to top surface,
 like the Waffle's own levels, which are 45 mm apart.
 
 | Item | Value | Why |
