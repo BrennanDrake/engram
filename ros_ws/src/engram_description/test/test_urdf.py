@@ -40,7 +40,7 @@ def test_arm_stands_on_deck_with_pan_axis_over_centre() -> None:
 def test_deck_clears_lidar() -> None:
     deck = next(j for j in expand().findall('joint') if j.get('name') == 'top_deck_joint')
     lidar_top = 0.122 + 0.009  # base_scan height + top of lds.stl
-    assert origin(deck)[2] - 0.003 > lidar_top
+    assert origin(deck)[2] - 0.009 > lidar_top  # plate underside is 9 mm down
 
 
 def test_without_deck_arm_sits_on_waffle_plate() -> None:

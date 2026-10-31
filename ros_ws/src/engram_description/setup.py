@@ -14,6 +14,7 @@ setup(
         (f'share/{package_name}/launch', glob('launch/*.launch.py')),
         (f'share/{package_name}/urdf', glob('urdf/*.xacro')),
         (f'share/{package_name}/meshes/so101', glob('meshes/so101/*.stl')),
+        (f'share/{package_name}/meshes/waffle', glob('meshes/waffle/*.stl')),
         (f'share/{package_name}/rviz', glob('rviz/*.rviz')),
     ],
     install_requires=['setuptools'],

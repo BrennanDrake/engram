@@ -21,6 +21,7 @@
 <robot name="engram" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
   <xacro:arg name="top_deck" default="true"/>
+  <!-- 45 mm (stock) puts the deck 3.5 mm into the LDS; 55 mm clears it by 6.5 mm -->
   <xacro:arg name="deck_spacing" default="0.055"/>
   <xacro:arg name="arm_x" default=""/>
   <xacro:arg name="arm_y" default="0.0"/>
@@ -33,7 +34,8 @@
   <!-- Waffle footprint centre in base_link, from turtlebot3_waffle.urdf's collision box -->
   <xacro:property name="waffle_centre_x" value="-0.064"/>
   <xacro:property name="waffle_plate_size" value="0.266"/>
-  <xacro:property name="plate_thickness" value="0.003"/>
+  <!-- Waffle plates are ribbed: underside is 9 mm below the top surface -->
+  <xacro:property name="plate_thickness" value="0.009"/>
   <xacro:property name="so101_base_underside_z" value="-0.0024"/>
   <!-- Shoulder pan axis in SO-101 base_link, from so101_new_calib.urdf -->
   <xacro:property name="so101_pan_axis_x" value="0.0388"/>
@@ -49,7 +51,9 @@
     <xacro:property name="arm_origin_x" value="${arm_x - waffle_centre_x}"/>
     <xacro:property name="arm_origin_z" value="${-so101_base_underside_z}"/>
 
-    <!-- top_deck_link sits on the deck's top surface, above the Waffle centre -->
+    <!-- top_deck_link sits on the deck's top surface, above the Waffle centre.
+         deck_spacing is top surface to top surface, like the Waffle's own levels
+         (45 mm apart). -->
     <joint name="top_deck_joint" type="fixed">
       <parent link="base_link"/>
       <child link="top_deck_link"/>
@@ -57,10 +61,12 @@
     </joint>
 
     <link name="top_deck_link">
+      <!-- Same plate as the Waffle's other levels, cut from waffle_base.stl.
+           Its top surface is at z = 91.5 mm in that mesh. -->
       <visual>
-        <origin xyz="0 0 ${-plate_thickness / 2}" rpy="0 0 0"/>
+        <origin xyz="0 0 ${-waffle_top_plate_z}" rpy="0 0 0"/>
         <geometry>
-          <box size="${waffle_plate_size} ${waffle_plate_size} ${plate_thickness}"/>
+          <mesh filename="package://engram_description/meshes/waffle/waffle_plate.stl" scale="0.001 0.001 0.001"/>
         </geometry>
         <material name="light_black"/>
       </visual>

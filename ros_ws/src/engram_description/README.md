@@ -31,6 +31,7 @@ Sliders for the six arm joints come up next to RViz. Launch arguments:
 | `urdf/engram.urdf.xacro` | Top level: includes the Waffle and mounts the arm |
 | `urdf/so101_follower.urdf.xacro` | SO-101 follower as a macro (`prefix`, `parent`, `origin`) |
 | `meshes/so101/` | SO-101 meshes |
+| `meshes/waffle/waffle_plate.stl` | One Waffle plate, for the top deck |
 | `launch/display.launch.py` | `robot_state_publisher` + joint sliders + RViz |
 
 The SO-101 macro and meshes come from
@@ -48,13 +49,15 @@ All in Waffle `base_link`, which sits on the wheel axle with +x forward.
 
 The LDS stays on the Waffle top plate, which becomes the level below the deck.
 `top_deck_link` is the deck's top surface, centred over the Waffle footprint
-(x = -0.064 m). The deck is drawn as a plain 266 mm square, 3 mm thick; its
-standoffs are not modelled yet.
+(x = -0.064 m). The deck uses the same plate as the Waffle's other levels,
+cut from `waffle_base.stl` into `meshes/waffle/waffle_plate.stl`; its
+standoffs are not modelled yet. `deck_spacing` is top surface to top surface,
+like the Waffle's own levels, which are 45 mm apart.
 
 | Item | Value | Why |
 |---|---|---|
 | Deck surface | z = 0.0915 + `deck_spacing` | 0.1465 m at the default |
-| Deck to LDS clearance | 12.5 mm at the default | LDS top is at z = 0.131 m; the deck underside is 3 mm below its surface. Stock 45 mm spacing leaves 2.5 mm |
+| Deck to LDS clearance | 6.5 mm at the default | LDS top is at z = 0.131 m; the ribbed plate's underside is 9 mm below its surface. Stock 45 mm spacing would put the deck 3.5 mm into the LDS; 80 mm (35 + 45 mm spacers) leaves 31.5 mm |
 | Arm x | -0.1028 m | Puts the pan axis over the robot's centre and leaves about 110 mm of deck ahead of the arm base for the pan-tilt camera |
 | Arm y | 0 | Centred |
 
