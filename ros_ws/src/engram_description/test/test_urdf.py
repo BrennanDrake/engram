@@ -24,14 +24,33 @@ def test_xacro_expands_to_base_and_arm() -> None:
     assert not any(m.get('filename').startswith('assets/') for m in robot.iter('mesh'))
 
 
-def test_arm_mount_is_centred_on_top_plate() -> None:
+def origin(joint: ET.Element) -> list[float]:
+    return [float(v) for v in joint.find('origin').get('xyz').split()]
+
+
+def test_arm_stands_on_deck_with_pan_axis_over_centre() -> None:
     joint = mount_joint(expand())
-    assert joint.find('parent').get('link') == 'base_link'
-    _, y, z = (float(v) for v in joint.find('origin').get('xyz').split())
+    assert joint.find('parent').get('link') == 'top_deck_link'
+    x, y, z = origin(joint)
+    assert abs(x + 0.0388) < 1e-6
     assert y == 0.0
+    assert abs(z - 0.0024) < 1e-6
+
+
+def test_deck_clears_lidar() -> None:
+    deck = next(j for j in expand().findall('joint') if j.get('name') == 'top_deck_joint')
+    lidar_top = 0.122 + 0.009  # base_scan height + top of lds.stl
+    assert origin(deck)[2] - 0.003 > lidar_top
+
+
+def test_without_deck_arm_sits_on_waffle_plate() -> None:
+    joint = mount_joint(expand('top_deck:=false'))
+    assert joint.find('parent').get('link') == 'base_link'
+    x, y, z = origin(joint)
+    assert (x, y) == (0.0222, 0.0)
     assert abs(z - 0.0939) < 1e-6
 
 
-def test_arm_x_is_a_launch_argument() -> None:
-    joint = mount_joint(expand('arm_x:=0.03'))
-    assert joint.find('origin').get('xyz').split()[0] == '0.03'
+def test_arm_x_overrides_default_in_base_link() -> None:
+    assert origin(mount_joint(expand('top_deck:=false', 'arm_x:=0.03')))[0] == 0.03
+    assert abs(origin(mount_joint(expand('arm_x:=-0.09')))[0] - (-0.09 + 0.064)) < 1e-9

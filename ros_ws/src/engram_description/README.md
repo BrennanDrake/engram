@@ -14,9 +14,15 @@ source install/setup.bash
 ros2 launch engram_description display.launch.py
 ```
 
-Sliders for the six arm joints come up next to RViz. Pass `gui:=false` to drop
-the sliders, `rviz:=false` to run only `robot_state_publisher`, or
-`arm_x:=<metres>` to slide the arm along the robot while checking hole alignment.
+Sliders for the six arm joints come up next to RViz. Launch arguments:
+
+| Argument | Default | Meaning |
+|---|---|---|
+| `top_deck` | `true` | Add the extra deck and stand the arm on it; `false` puts the arm on the Waffle top plate |
+| `deck_spacing` | `0.055` | Waffle top plate surface to deck surface [m] |
+| `arm_x` | empty | Arm `base_link` x in Waffle `base_link` [m]; empty uses the layout's default |
+| `gui` | `true` | Joint sliders |
+| `rviz` | `true` | Start RViz |
 
 ## Files
 
@@ -34,9 +40,25 @@ take a prefix (`arm_` here), and transmissions were removed. Meshes over
 15k triangles were decimated to 15k so each stays under the repo's 1 MB file
 limit; `base_so101_v2.stl` (the part with the mounting holes) is untouched.
 
-## Arm placement
+## Layout
 
 All in Waffle `base_link`, which sits on the wheel axle with +x forward.
+
+### With the top deck (default)
+
+The LDS stays on the Waffle top plate, which becomes the level below the deck.
+`top_deck_link` is the deck's top surface, centred over the Waffle footprint
+(x = -0.064 m). The deck is drawn as a plain 266 mm square, 3 mm thick; its
+standoffs are not modelled yet.
+
+| Item | Value | Why |
+|---|---|---|
+| Deck surface | z = 0.0915 + `deck_spacing` | 0.1465 m at the default |
+| Deck to LDS clearance | 12.5 mm at the default | LDS top is at z = 0.131 m; the deck underside is 3 mm below its surface. Stock 45 mm spacing leaves 2.5 mm |
+| Arm x | -0.1028 m | Puts the pan axis over the robot's centre and leaves about 110 mm of deck ahead of the arm base for the pan-tilt camera |
+| Arm y | 0 | Centred |
+
+### Without the deck (`top_deck:=false`)
 
 | Axis | Value | Why |
 |---|---|---|
@@ -58,6 +80,6 @@ hole grid, so `arm_x` is not yet checked against real holes. Once the bolts
 are in, set `arm_x` to the measured distance from the wheel axle line to the
 arm's `base_link` (pan axis minus 38.8 mm) and update the default.
 
-Known overlaps in the stock model: the arm base overhangs the front edge of
+Known overlaps in the no-deck layout: the arm base overhangs the front edge of
 the top plate by about 13 mm, and it overlaps the stock R200 camera at the
 front of the Waffle, which engram replaces with the pan-tilt RealSense.

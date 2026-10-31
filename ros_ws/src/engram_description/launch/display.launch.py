@@ -17,6 +17,10 @@ def generate_launch_description() -> LaunchDescription:
             [
                 'xacro ',
                 PathJoinSubstitution([share, 'urdf', 'engram.urdf.xacro']),
+                ' top_deck:=',
+                LaunchConfiguration('top_deck'),
+                ' deck_spacing:=',
+                LaunchConfiguration('deck_spacing'),
                 ' arm_x:=',
                 LaunchConfiguration('arm_x'),
             ]
